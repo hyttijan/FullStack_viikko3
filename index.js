@@ -3,13 +3,17 @@ const bodyParser = require("body-parser")
 const morgan = require("morgan")
 const app = express()
 const cors = require('cors')
+
 app.use(cors())
 app.use(bodyParser.json())
+app.use(express.static('build'))
 
 app.use(morgan(':method :url :data :status :res[content-length] - :response-time ms'))
+
 morgan.token('data',function(request,response){
 	return JSON.stringify(request.body)
 })
+
 let persons = [
     {
       name: "Arto Hellas",
@@ -31,7 +35,8 @@ let persons = [
       number: "040-123456",
       id: 4
     }
- ]
+]
+
 const generateId = ()=>Math.round(Math.random()*9999)
 
 app.get("/api/persons/",(request,response)=>{
