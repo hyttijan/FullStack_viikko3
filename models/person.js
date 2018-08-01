@@ -1,8 +1,10 @@
 const mongoose = require('mongoose')
 
-const user = process.env.MONGO_USER;
-const password = process.env.MONGO_PASSWORD
-const url = `mongodb://${user}:${password}@ds261521.mlab.com:61521/fullstackviikko3`
+
+if(process.env.NODE_ENV!=='production'){
+	require('dotenv').config()	
+}
+const url = process.env.MONGODB_URI
 mongoose.connect(url)
 
 const PersonSchema = new mongoose.Schema({
