@@ -3,6 +3,8 @@ const bodyParser = require("body-parser")
 const morgan = require("morgan")
 const app = express()
 const cors = require('cors')
+const Person = require('./models/person')
+
 
 app.use(cors())
 app.use(bodyParser.json())
@@ -14,56 +16,86 @@ morgan.token('data',function(request,response){
 	return JSON.stringify(request.body)
 })
 
-let persons = [
-    {
-      name: "Arto Hellas",
-      number: "040-123456",
-      id: 1
-    },
-    {
-      name: "Martti Tienari",
-      number: "040-123456",
-      id: 2
-    },
-    {
-      name: "Arto Järvinen",
-      number: "040-123456",
-      id: 3
-    },
-    {
-      name: "Lea Kutvonen",
-      number: "040-123456",
-      id: 4
-    }
-]
 
+
+
+/**
 const generateId = ()=>Math.round(Math.random()*9999)
 
+**/
+
 app.get("/api/persons/",(request,response)=>{
-	response.json(persons)
+	Person.find({}).then((result)=>{
+		response.json(result.map(Person.format))
+	}).catch((error)=>{
+		console.log(error)
+		response.status(404).end()
+	})
 })
 app.get("/api/persons/:id",(request,response)=>{
-	const id = Number(request.params.id)
-	const person = persons.find((person)=>person.id===id)
-	person?response.json(person):response.status("404").end()	
+	const id = request.params.id
+	Person.findOne({_id:id}).then((result)=>{
+		console.log(result)
+		response.json(Person.format(result))
+	}).catch((error)=>{
+		console.log(error)
+		response.status(404).end()
+	})
+	
 })
 app.delete("/api/persons/:id",(request,response)=>{
-	const id = Number(request.params.id)
-	persons = persons.filter((person)=>person.id!==id)
-	response.status("204").end()
+	const id = request.params.id
+	Person.findByIdAndRemove(id)
+	.then((result)=>{
+		console.log(result)
+		response.status(204).end()
+	})
+	.catch((error)=>{
+		console.log(error)
+		response.status(404).end()
+	})
 })
 app.post("/api/persons/",(request,response)=>{
-	let person =    {
+	let person =	new Person({
 					name:request.body.name, 
 				  	number:request.body.number,
-				  	id: generateId()
-					}
+					})
 	if(person.name===undefined||person.number===undefined){
-		response.status("400").json({error:"Content is missing"})
+		response.status(400).json({error:"Content is missing"})
 	}
 	else{
-		persons = persons.concat(person)
-		response.status("201").end()	
+		Person.find({name:person.name}).then((result)=>{
+			if(result.length==0){	
+				person.save().then((result)=>{
+					response.status(201).end()	
+				})
+				.catch((error)=>{
+					response.status(404).end()
+				})
+			}
+			else{
+				response.status(409).end()
+			}
+		})
+		.catch((error)=>{
+			console.log(error)
+			response.status(404)
+		})
+	}
+})
+app.put("/api/persons/:id",(request, response)=>{
+	const id = request.params.id
+	const person = {
+		name: request.body.name,
+		number: request.body.number
+	}
+	if(person.name==='undefined'||person.number=='undefined'){
+		response.status(400).json({error:"Content is missing"})
+	}
+	else{
+		Person.findOneAndUpdate({_id: id},person).then((updatedPerson)=>{
+			response.json(Person.format(updatedPerson))
+		})	
 	}
 })
 app.get("/info/",(request,response)=>{
