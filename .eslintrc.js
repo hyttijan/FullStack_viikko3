@@ -1,5 +1,6 @@
 module.exports = {
     "env": {
+        "node": true,
         "es6": true
     },
     "extends": "eslint:recommended",
@@ -32,6 +33,7 @@ module.exports = {
         "semi": [
             "error",
             "never"
-        ]
+        ],
+        "no-unused-vars":[2, {"vars":"local","args":"none"}]
     }
 };
